@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+  <title>Schuttewetter</title>
+</head>
+
+<body>
+
+  <div class="container">
+    <div class="search-box">
+      <i class="fas fa-map-marker-alt"></i>
+      <input type="text" placeholder="Gib hier deine Stadt ein..">
+      <button class="fas fa-search"></button>
+    </div>
+
+    <div class="not-found">
+      <<img src="images/404.png" alt="404 Not Found">
+      <p>Stadt nicht gefunden</p>
+    </div>
+
+    <div class="weather-box">
+      <i class="weather-icon"></i>
+      <p class="temperature"></p>
+      <p class="description"></p>
+    </div>
+
+    <div class="weather-details">
+      <div class="detail humidity">
+        <i class="fas fa-tint"></i>
+        <div class="text">
+          <span></span>
+          <p>Luftfeuchtigkeit</p>
+        </div>
+      </div>
+      <div class="detail wind">
+        <i class="fas fa-wind"></i>
+        <div class="text">
+          <span></span>
+          <p>Windgeschwindigkeit</p>
+        </div>
+      </div>
+      <div class="detail time">
+        <i class="fas fa-clock"></i>
+        <div class="text">
+          <span></span>
+          <p>Wetter wurde hier zuletzt aktualisiert</p>
+        </div>
+      </div>
+      <div class="detail sunrise">
+        <i class="fas fa-sun"></i>
+        <div class="text">
+          <span></span>
+          <p>Sonnenaufgang</p>
+        </div>
+      </div>
+      <div class="detail sunset">
+        <i class="fas fa-moon"></i>
+        <div class="text">
+          <span></span>
+          <p>Sonnenuntergang</p>
+        </div>
+      </div>
+      <div class="detail precipitation">
+        <i class="fas fa-cloud-rain"></i>
+        <div class="text">
+          <span></span>
+          <p>Niederschlagswahrscheinlichkeit</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://kit.fontawesome.com/7c8801c017.js" crossorigin="anonymous"></script>
+  <script src="index.js"></script>
+  <script src="config.js"></script>
+</body>
+
+</html>
