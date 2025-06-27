@@ -2,84 +2,388 @@
 <html lang="de">
 
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wetter-App Pro</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Flaticon CDN Links -->
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.4.2/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.4.2/uicons-solid-rounded/css/uicons-solid-rounded.css'>
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.4.2/uicons-thin-regular/css/uicons-thin-regular.css'>
 
-  <link rel="stylesheet" href="style.css">
-  <title>Schuttewetter</title>
+    <!-- Font Awesome for other icons -->
+    <script src="https://kit.fontawesome.com/7c8801c017.js" crossorigin="anonymous"></script>
+
+    <style>
+        * { margin: 0; padding: 0; border: 0; outline: none; box-sizing: border-box; }
+        body {
+            height: 100vh; display: flex; align-items: center; justify-content: center;
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(to top, #374151, #111827);
+            transition: background 0.8s ease; padding: 20px 0;
+        }
+        body.bg-clear { background: linear-gradient(to top, #38bdf8, #0ea5e9); }
+        body.bg-clouds { background: linear-gradient(to top, #9ca3af, #6b7280); }
+        body.bg-rain { background: linear-gradient(to top, #4b5563, #1f2937); }
+        body.bg-snow { background: linear-gradient(to top, #e5e7eb, #d1d5db); }
+        body.bg-mist { background: linear-gradient(to top, #d1d5db, #9ca3af); }
+        body.bg-thunderstorm { background: linear-gradient(to top, #3730a3, #1e1b4b); }
+
+        .container {
+            position: relative; width: 90%; max-width: 420px;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            padding: 28px 32px; border-radius: 18px; height: auto;
+        }
+        
+        .search-box {
+            width: 100%; display: flex; align-items: center;
+            justify-content: space-between; position: relative; gap: 10px;
+        }
+        .search-box .input-wrapper { display: flex; align-items: center; flex-grow: 1; position: relative; }
+        .search-box .fa-map-marker-alt { position: absolute; left: 0; color: #1F2937; font-size: 28px; pointer-events: none; }
+        .search-box input { color: #111827; width: 100%; font-size: 20px; font-weight: 500; text-transform: uppercase; padding-left: 42px; background: transparent; }
+        .search-box input::placeholder { font-size: 18px; font-weight: 500; color: #475569; text-transform: capitalize; }
+        
+        .search-box .search-button {
+            cursor: pointer; width: 55px; height: 55px; color: white;
+            background: #3B82F6; border-radius: 50%; font-size: 24px;
+            transition: all 0.4s ease; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .search-box .search-button:hover { background: #1d4ed8; }
+        
+        .loader-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex; justify-content: center; align-items: center; z-index: 10;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s;
+        }
+        .loader-container.active { opacity: 1; visibility: visible; }
+        .loader {
+            width: 50px; height: 50px;
+            border: 5px solid #f3f3f3; border-top: 5px solid #3B82F6;
+            border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .initial-prompt, .weather-box, .weather-details, .not-found, .forecast-container { display: none; }
+        .initial-prompt.active, .weather-box.active, .weather-details.active, .not-found.active, .forecast-container.active {
+            display: block; animation: fadeIn 0.8s forwards;
+        }
+        .weather-details.active, .forecast-container.active { display: flex; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .initial-prompt { text-align: center; padding: 40px 0; color: #374151; }
+        .initial-prompt i { font-size: 4rem; margin-bottom: 1rem; color: #9ca3af; }
+        .initial-prompt h2 { font-size: 1.2rem; font-weight: 600; }
+
+        .not-found { text-align: center; margin-top: 50px; }
+        .not-found img { width: 70%; max-width: 200px; }
+        .not-found p { color: #1F2937; font-size: 22px; margin-top: 12px; }
+
+        .weather-box { text-align: center; margin-top: 20px; position: relative; }
+        .weather-box .city-name { font-size: 1.75rem; font-weight: 700; color: #1F2937; margin-bottom: 10px; }
+        .weather-box .weather-icon { font-size: 6rem; color: #3B82F6; }
+        .weather-box .temperature { position: relative; color: #1F2937; font-size: 4rem; font-weight: 800; margin-top: 10px; }
+        .weather-box .temperature span { position: absolute; margin-left: 4px; font-size: 1.5rem; }
+        .weather-box .description { color: #1F2937; font-size: 22px; text-transform: capitalize; margin-top: 10px; }
+        .weather-box .feels-like { color: #4b5563; font-size: 1rem; font-weight: 500; margin-top: 5px; }
+
+        .weather-details { width: 100%; flex-direction: column; margin-top: 20px; gap: 16px; }
+        .detail-row { display: flex; justify-content: space-between; width: 100%; }
+        .detail { display: flex; align-items: center; width: 48%; padding-bottom: 8px; border-bottom: 1px solid #ccc; }
+        .detail i { color: #3B82F6; font-size: 24px; margin-right: 12px; width: 25px; text-align: center; }
+        .weather-details .text { display: flex; flex-direction: column; }
+        .weather-details span { color: #1F2937; font-size: 18px; font-weight: 600; }
+        .weather-details p { color: #475569; font-size: 12px; font-weight: 500; }
+        
+        .forecast-container { margin-top: 30px; width: 100%; flex-direction: row; justify-content: space-between; gap: 10px; }
+        .forecast-day { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; padding: 10px 5px; background: rgba(229, 231, 235, 0.5); border-radius: 12px; }
+        .forecast-day .day-name { font-weight: 600; font-size: 0.9rem; }
+        .forecast-day .forecast-icon { font-size: 1.8rem; color: #3B82F6; margin: 8px 0; }
+        .forecast-day .temp-range { font-size: 0.8rem; font-weight: 500; color: #374151; }
+        .forecast-day .temp-range .max { font-weight: 700; color: #1F2937; }
+
+        #share-button { position: absolute; top: -15px; right: -15px; display: none; }
+        #share-button.active { display: flex; }
+
+        .aqi-value.good { color: #22c55e; }
+        .aqi-value.fair { color: #84cc16; }
+        .aqi-value.moderate { color: #facc15; }
+        .aqi-value.poor { color: #f97316; }
+        .aqi-value.very-poor { color: #ef4444; }
+    </style>
 </head>
 
 <body>
 
-  <div class="container">
-    <div class="search-box">
-      <i class="fas fa-map-marker-alt"></i>
-      <input type="text" placeholder="Gib hier deine Stadt ein..">
-      <button class="fas fa-search"></button>
+    <div class="container">
+        <div class="loader-container"><div class="loader"></div></div>
+        
+        <div class="search-box">
+            <div class="input-wrapper">
+                <i class="fas fa-map-marker-alt"></i>
+                <input type="text" placeholder="Stadt oder PLZ...">
+            </div>
+            <button class="search-button" title="Suchen">
+                <i class="fi fi-rr-search"></i>
+            </button>
+        </div>
+
+        <div class="initial-prompt active">
+             <i class="fas fa-map-marked-alt"></i>
+             <h2>Wetter entdecken</h2>
+             <p>Geben Sie eine Stadt ein, um zu beginnen.</p>
+        </div>
+
+        <div class="not-found">
+            <img src="https://placehold.co/400x300/FFFFFF/3B82F6?text=Nicht+gefunden" alt="Stadt nicht gefunden">
+            <p>Oops! Ort nicht gefunden.</p>
+        </div>
+
+        <div class="weather-box">
+            <button id="share-button" class="icon-button" title="Wetter teilen">
+                <i class="fas fa-share-alt"></i>
+            </button>
+            <h2 class="city-name"></h2>
+            <i class="weather-icon fas fa-sun"></i>
+            <p class="temperature"></p>
+            <p class="feels-like"></p>
+            <p class="description"></p>
+        </div>
+
+        <div class="weather-details">
+            <div class="detail-row">
+                <div class="detail humidity"><i class="fi fi-rr-humidity"></i><div class="text"><span></span><p>Luftfeuchtigkeit</p></div></div>
+                <div class="detail wind"><i class="fi fi-rr-wind"></i><div class="text"><span></span><p>Wind</p></div></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail sunrise"><i class="fi fi-rr-sunrise-alt"></i><div class="text"><span></span><p>Sonnenaufgang</p></div></div>
+                <div class="detail sunset"><i class="fi fi-sr-sunset"></i><div class="text"><span></span><p>Sonnenuntergang</p></div></div>
+            </div>
+            <div class="detail-row">
+                <div class="detail pressure"><i class="fi fi-rr-dashboard"></i><div class="text"><span></span><p>Luftdruck</p></div></div>
+                <div class="detail aqi"><i class="fi fi-rr-leaf"></i><div class="text"><span class="aqi-value"></span><p>Luftqualität</p></div></div>
+            </div>
+        </div>
+        
+        <div class="forecast-container"></div>
     </div>
 
-    <div class="not-found">
-      <<img src="images/404.png" alt="404 Not Found">
-      <p>Stadt nicht gefunden</p>
-    </div>
+    <script>
+        // Get all necessary DOM elements at once for a clean overview.
+        const searchButton = document.querySelector('.search-button');
+        const searchInput = document.querySelector('.search-box input');
+        const shareButton = document.getElementById('share-button');
+        const loader = document.querySelector('.loader-container');
+        const initialPrompt = document.querySelector('.initial-prompt');
+        const weatherBox = document.querySelector('.weather-box');
+        const weatherDetails = document.querySelector('.weather-details');
+        const error404 = document.querySelector('.not-found');
+        const forecastContainer = document.querySelector('.forecast-container');
+        
+        const API_KEY = '841616e1b228c00f7d60c85a1c9a9708';
+        let currentWeatherData = null; // Stores the current weather data for the share functionality.
+        
+        // Defines the visual properties for each weather condition. Avoids code repetition.
+        const weatherConditions = {
+            'Clear': { icon: 'fa-sun', bg: 'bg-clear' },
+            'Clouds': { icon: 'fa-cloud', bg: 'bg-clouds' },
+            'Rain': { icon: 'fa-cloud-showers-heavy', bg: 'bg-rain' },
+            'Drizzle': { icon: 'fa-cloud-rain', bg: 'bg-rain' },
+            'Thunderstorm': { icon: 'fa-bolt', bg: 'bg-thunderstorm' },
+            'Snow': { icon: 'fa-snowflake', bg: 'bg-snow' },
+            'Mist': { icon: 'fa-smog', bg: 'bg-mist' },
+            'Haze': { icon: 'fa-smog', bg: 'bg-mist' },
+            'Fog': { icon: 'fa-smog', bg: 'bg-mist' },
+            'default': { icon: 'fa-question-circle', bg: '' }
+        };
 
-    <div class="weather-box">
-      <i class="weather-icon"></i>
-      <p class="temperature"></p>
-      <p class="description"></p>
-    </div>
+        // Bring the app to life: react to clicks and inputs.
+        searchButton.addEventListener('click', fetchDataFromInput);
+        searchInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') fetchDataFromInput();
+        });
+        shareButton.addEventListener('click', shareWeather);
+        
+        // On page load, check if there was a last search.
+        document.addEventListener('DOMContentLoaded', () => {
+            const lastCity = localStorage.getItem('lastCity');
+            if (lastCity) {
+                searchInput.value = lastCity;
+                fetchDataFromInput();
+            }
+        });
+        
+        // Starts the search based on the text input.
+        function fetchDataFromInput() {
+            const locationQuery = searchInput.value.trim();
+            if (locationQuery === '') return;
+            
+            // Decide whether to search by zip code or city name.
+            const isZipCode = /^\d{5}$/.test(locationQuery);
+            const queryParam = isZipCode ? `zip=${locationQuery},DE` : `q=${locationQuery}`;
+            
+            fetchAllData(queryParam, locationQuery);
+        }
 
-    <div class="weather-details">
-      <div class="detail humidity">
-        <i class="fas fa-tint"></i>
-        <div class="text">
-          <span></span>
-          <p>Luftfeuchtigkeit</p>
-        </div>
-      </div>
-      <div class="detail wind">
-        <i class="fas fa-wind"></i>
-        <div class="text">
-          <span></span>
-          <p>Windgeschwindigkeit</p>
-        </div>
-      </div>
-      <div class="detail time">
-        <i class="fas fa-clock"></i>
-        <div class="text">
-          <span></span>
-          <p>Wetter wurde hier zuletzt aktualisiert</p>
-        </div>
-      </div>
-      <div class="detail sunrise">
-        <i class="fas fa-sun"></i>
-        <div class="text">
-          <span></span>
-          <p>Sonnenaufgang</p>
-        </div>
-      </div>
-      <div class="detail sunset">
-        <i class="fas fa-moon"></i>
-        <div class="text">
-          <span></span>
-          <p>Sonnenuntergang</p>
-        </div>
-      </div>
-      <div class="detail precipitation">
-        <i class="fas fa-cloud-rain"></i>
-        <div class="text">
-          <span></span>
-          <p>Niederschlagswahrscheinlichkeit</p>
-        </div>
-      </div>
-    </div>
-  </div>
+        // Main function that bundles all API requests (using async/await for better readability).
+        async function fetchAllData(queryParam, searchedValue) {
+            showLoader(true);
+            hideAllSections();
 
-  <script src="https://kit.fontawesome.com/7c8801c017.js" crossorigin="anonymous"></script>
-  <script src="index.js"></script>
-  <script src="config.js"></script>
+            try {
+                // Step 1: Fetch current weather.
+                const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?${queryParam}&appid=${API_KEY}&units=metric&lang=de`; // (test API only, please replace with your own)
+                const weatherRes = await fetch(weatherUrl);
+                if (!weatherRes.ok) throw new Error('Weather data not found');
+                const weatherData = await weatherRes.json();
+                currentWeatherData = weatherData;
+
+                // Step 2: Extract coordinates for further requests.
+                const { lat, lon } = weatherData.coord;
+                const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=de`; // (test API only, please replace with your own)
+                const airPollutionUrl = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`; // (test API only, please replace with your own)
+                
+                // Step 3: Load forecast and air quality in parallel.
+                const [forecastRes, airRes] = await Promise.all([
+                    fetch(forecastUrl),
+                    fetch(airPollutionUrl)
+                ]);
+                if (!forecastRes.ok || !airRes.ok) throw new Error('Could not load additional data');
+
+                const forecastData = await forecastRes.json();
+                const airData = await airRes.json();
+
+                // Everything loaded successfully, now display it.
+                localStorage.setItem('lastCity', searchedValue);
+                displayAllData(weatherData, forecastData, airData);
+
+            } catch (error) {
+                console.error('Error fetching data:', error.message);
+                displayError();
+            } finally {
+                // The loader is always hidden, regardless of success or failure.
+                showLoader(false);
+            }
+        }
+        
+        // Toggles the visibility of UI elements.
+        function showLoader(show) { loader.classList.toggle('active', show); }
+        function hideAllSections() {
+            [initialPrompt, weatherBox, weatherDetails, error404, forecastContainer, shareButton].forEach(el => el.classList.remove('active'));
+        }
+
+        // Distributes the loaded data to the corresponding display functions.
+        function displayAllData(weatherData, forecastData, airData) {
+            displayCurrentWeather(weatherData);
+            displayForecast(forecastData);
+            displayExtraDetails(weatherData, airData);
+            if (navigator.share) {
+                shareButton.classList.add('active');
+            }
+        }
+
+        // Fills the main weather view.
+        function displayCurrentWeather(data) {
+            weatherBox.classList.add('active');
+            weatherDetails.classList.add('active');
+            
+            weatherBox.querySelector('.city-name').textContent = data.name;
+            weatherBox.querySelector('.temperature').innerHTML = `${parseInt(data.main.temp)}<span>°C</span>`;
+            weatherBox.querySelector('.feels-like').textContent = `Gefühlt wie ${parseInt(data.main.feels_like)}°C`;
+            weatherBox.querySelector('.description').textContent = data.weather[0].description;
+            
+            weatherDetails.querySelector('.humidity span').textContent = `${data.main.humidity}%`;
+            weatherDetails.querySelector('.wind span').textContent = `${Math.round(data.wind.speed * 3.6)} km/h`;
+            weatherDetails.querySelector('.sunrise span').textContent = new Date(data.sys.sunrise * 1000).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+            weatherDetails.querySelector('.sunset span').textContent = new Date(data.sys.sunset * 1000).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+            
+            updateWeatherVisuals(data.weather[0].main, weatherBox.querySelector('.weather-icon'));
+        }
+
+        // Fills the extra details like pressure and air quality.
+        function displayExtraDetails(weatherData, airData) {
+            weatherDetails.querySelector('.pressure span').textContent = `${weatherData.main.pressure} hPa`;
+            
+            const aqi = airData.list[0].main.aqi;
+            const aqiMapping = {
+                1: { text: 'Gut', class: 'good' }, 2: { text: 'Passabel', class: 'fair' },
+                3: { text: 'Mäßig', class: 'moderate' }, 4: { text: 'Schlecht', class: 'poor' },
+                5: { text: 'Sehr Schlecht', class: 'very-poor' }
+            };
+            const aqiDisplay = aqiMapping[aqi] || { text: '-', class: ''};
+
+            const aqiSpan = weatherDetails.querySelector('.aqi-value');
+            aqiSpan.textContent = aqiDisplay.text;
+            aqiSpan.className = `aqi-value ${aqiDisplay.class}`;
+        }
+        
+        // Creates and displays the 5-day forecast.
+        function displayForecast(forecastData) {
+            forecastContainer.innerHTML = ''; // Clear old forecast.
+            const dailyData = processForecastData(forecastData.list);
+
+            dailyData.forEach(day => {
+                const visuals = weatherConditions[day.icon] || weatherConditions.default;
+                forecastContainer.innerHTML += `
+                    <div class="forecast-day">
+                        <div class="day-name">${day.dayName}</div>
+                        <i class="forecast-icon fas ${visuals.icon}"></i>
+                        <div class="temp-range"><span class="max">${day.maxTemp}°</span> / ${day.minTemp}°</div>
+                    </div>`;
+            });
+            forecastContainer.classList.add('active');
+        }
+
+        // Prepares the raw forecast data for display.
+        function processForecastData(list) {
+            const daily = {};
+            // Groups all 3-hour data by calendar day.
+            list.forEach(item => {
+                const date = item.dt_txt.split(' ')[0];
+                if (!daily[date]) daily[date] = { temps: [], icons: [] };
+                daily[date].temps.push(item.main.temp);
+                daily[date].icons.push(item.weather[0].main);
+            });
+            // Converts the object to an array and skips today.
+            return Object.entries(daily).slice(1, 6).map(([date, data]) => ({
+                dayName: new Date(date).toLocaleDateString('de-DE', { weekday: 'short' }),
+                minTemp: Math.round(Math.min(...data.temps)),
+                maxTemp: Math.round(Math.max(...data.temps)),
+                icon: data.icons[Math.floor(data.icons.length / 2)] // Takes the icon from the middle of the day.
+            }));
+        }
+        
+        // Displays the error view.
+        function displayError() {
+            hideAllSections();
+            error404.classList.add('active');
+            document.body.className = '';
+        }
+
+        // Uses the Web Share API to share the weather.
+        function shareWeather() {
+            if (navigator.share && currentWeatherData) {
+                const { name, main, weather } = currentWeatherData;
+                navigator.share({
+                    title: `Wetter in ${name}`,
+                    text: `Aktuelles Wetter in ${name}: ${Math.round(main.temp)}°C und ${weather[0].description}.`,
+                    url: window.location.href
+                }).catch(error => console.log('Error sharing:', error));
+            }
+        }
+        
+        // A single function to update icon and background.
+        function updateWeatherVisuals(condition, iconElement) {
+            const visuals = weatherConditions[condition] || weatherConditions.default;
+            iconElement.className = `weather-icon fas ${visuals.icon}`;
+            document.body.className = visuals.bg;
+        }
+    </script>
 </body>
-
 </html>
