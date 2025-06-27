@@ -1,3 +1,6 @@
+![Wetter-App Pro](https://i.ibb.co/SXZfvwPM/wetter.png)
+
+
 Wetter-App Pro
 - Eine moderne und interaktive Wetter-App, die aktuelle Wetterdaten, eine 5-Tage-Vorhersage und zusätzliche Umgebungsinformationen für jeden Ort der Welt anzeigt. Das Projekt wurde mit reinem HTML, CSS und JavaScript entwickelt und legt Wert auf eine saubere Benutzeroberfläche und intuitive Bedienung.
 
